@@ -2,13 +2,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useUser } from "@/context/UserContext"; // Eğer kullanıcı adını context'e kaydetmek istersen
+import { useUser } from "@/context/UserContext"; // Context'i import ettik
 
 export default function LoginPage() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
   const router = useRouter();
-  const { setUsername } = useUser(); // <--- EKLE
+  
+  // Context'ten hem isimi hem ID'yi kaydetmek için fonksiyonları alıyoruz
+  const { setUsername, setUserId } = useUser(); 
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,8 +25,13 @@ export default function LoginPage() {
     const data = await res.json();
 
     if (res.ok) {
-      // Başarılı giriş
-      setUsername(form.username); // <--- BU SATIRI EKLE (İsmi hafızaya at)
+      // 1. Kullanıcı adını hafızaya at
+      setUsername(data.user.username);
+      
+      // 2. Kullanıcı ID'sini hafızaya at (Burası yeni eklendi)
+      setUserId(data.user.id);
+
+      // 3. Panele yönlendir
       router.push("/dashboard"); 
     } else {
       setError(data.message);
