@@ -8,16 +8,18 @@ const HomeIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" view
 const MovieIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 0 1-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5A1.125 1.125 0 0 1 18 18.375M20.625 4.5H3.375m17.25 0c.621 0 1.125.504 1.125 1.125M20.625 4.5h-1.5C18.504 4.5 18 5.004 18 5.625m3.75 0v1.5c0 .621-.504 1.125-1.125 1.125M3.375 4.5c-.621 0-1.125.504-1.125 1.125M3.375 4.5h1.5C5.496 4.5 6 5.004 6 5.625m-3.75 0v1.5c0 .621.504 1.125 1.125 1.125m0 0h1.5m4.875 6.018c.163.03.332.047.506.047.533 0 1.006-.176 1.387-.474m-1.893.427L12 14.25" /></svg>);
 const TvIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M6 20.25h12m-7.5-3v3m3-3v3m-10.125-3h17.25c.621 0 1.125-.504 1.125-1.125V4.875c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125Z" /></svg>);
 const LogoutIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" /></svg>);
+const UserIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>);
 
 // --- SIDEBAR BİLEŞENİ ---
 const Sidebar = () => {
   const pathname = usePathname();
-  const { username } = useUser(); // Kullanıcı adını çektik
+  const { username } = useUser();
 
   const menuItems = [
-    { name: "Main Page", href: "/dashboard", icon: <HomeIcon /> },
+    { name: "Main Page", href: "/dashboard", icon: <HomeIcon /> }, // İsim değişti
     { name: "Movies", href: "/dashboard/movies", icon: <MovieIcon /> },
     { name: "Series", href: "/dashboard/series", icon: <TvIcon /> },
+    { name: "Profile", href: "/profile", icon: <UserIcon /> }, // Profile eklendi
   ];
 
   return (
@@ -43,16 +45,16 @@ const Sidebar = () => {
         <div className="p-4 border-t border-gray-700">
           <div className="flex items-center gap-3 mb-4 px-2">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500"></div>
-            {/* Kullanıcı adı varsa göster yoksa User yaz */}
             <div className="text-sm font-bold text-white">{username || "User"}</div>
           </div>
+          {/* İsim Log Out oldu */}
           <Link href="/" className="flex items-center gap-2 text-red-400 hover:text-red-300 px-2 transition text-sm font-bold">
-            <LogoutIcon /> Log Out
+            <LogoutIcon /> Log Out 
           </Link>
         </div>
       </div>
 
-      {/* --- MOBİL BOTTOM BAR (Altta Duran - Yeni Eklediğimiz Kısım) --- */}
+      {/* --- MOBİL BOTTOM BAR (Altta Duran) --- */}
       <div className="md:hidden fixed bottom-0 left-0 w-full bg-gray-800 border-t border-gray-700 flex justify-around items-center p-3 z-50 safe-area-bottom">
         {menuItems.map((item) => {
           const isActive = pathname === item.href;
@@ -63,18 +65,17 @@ const Sidebar = () => {
             </Link>
           );
         })}
+        {/* Mobilde de Log Out yaptık */}
         <Link href="/" className="flex flex-col items-center gap-1 text-red-500">
            <LogoutIcon />
-           <span className="text-[10px] font-bold">Exit</span>
+           <span className="text-[10px] font-bold">Log Out</span>
         </Link>
       </div>
     </>
   );
 };
 
-// Bu layout, içindeki sayfaları (children) sarmalar
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  // UserProvider'ı buradan kaldırdık çünkü artık en dışta (RootLayout) var.
   return (
     <div className="min-h-screen bg-gray-900 text-white flex">
       <Sidebar />
