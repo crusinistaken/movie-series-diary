@@ -49,14 +49,39 @@ export default function ProfilePage() {
   // 2. ŞİFRE GÜNCELLEME (Frontend Simülasyonu - Backend'i yazmadıysak uyarır)
   const handlePassUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPassMsg("");
+
+    if (!userId) {
+        setPassMsg("User not found.");
+        return;
+    }
+
     if (passForm.newPassword.length < 6) {
         setPassMsg("Password must be at least 6 characters.");
         return;
     }
-    // Buraya API isteği gelebilir, şimdilik sadece UI gösteriyoruz
-    setPassMsg("Password updated successfully!");
-    setPassForm({ newPassword: "" });
-    setTimeout(() => setPassMsg(""), 3000);
+
+    try {
+        const res = await fetch("/api/auth/update-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+                userId: userId, // Context'ten gelen userId
+                newPassword: passForm.newPassword 
+            }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            setPassMsg("Success! Password changed.");
+            setPassForm({ newPassword: "" });
+        } else {
+            setPassMsg(data.message || "Error updating password.");
+        }
+    } catch (error) {
+        setPassMsg("Connection error.");
+    }
   };
 
   return (
