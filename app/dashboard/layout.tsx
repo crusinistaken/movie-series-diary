@@ -13,13 +13,14 @@ const UserIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" view
 // --- SIDEBAR BİLEŞENİ ---
 const Sidebar = () => {
   const pathname = usePathname();
-  const { username } = useUser();
+  const { username, userAvatar } = useUser(); // <--- Avatar bilgisini de çektik!
 
   const menuItems = [
-    { name: "Main Page", href: "/dashboard", icon: <HomeIcon /> }, // İsim değişti
+    { name: "Main Page", href: "/dashboard", icon: <HomeIcon /> },
     { name: "Movies", href: "/dashboard/movies", icon: <MovieIcon /> },
     { name: "Series", href: "/dashboard/series", icon: <TvIcon /> },
-    { name: "Profile", href: "/dashboard/profile", icon: <UserIcon /> },  ];
+    { name: "Profile", href: "/dashboard/profile", icon: <UserIcon /> },
+  ];
 
   return (
     <>
@@ -41,12 +42,23 @@ const Sidebar = () => {
           })}
         </nav>
 
+        {/* ALT KULLANICI KISMI */}
         <div className="p-4 border-t border-gray-700">
           <div className="flex items-center gap-3 mb-4 px-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500"></div>
-            <div className="text-sm font-bold text-white">{username || "User"}</div>
+            
+            {/* AVATAR ALANI - ARTIK DİNAMİK! */}
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 p-0.5">
+                <div className="w-full h-full bg-gray-900 rounded-full overflow-hidden flex items-center justify-center">
+                    {userAvatar ? (
+                        <img src={userAvatar} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                        <span className="font-bold text-sm">{username ? username.charAt(0).toUpperCase() : "U"}</span>
+                    )}
+                </div>
+            </div>
+
+            <div className="text-sm font-bold text-white line-clamp-1">{username || "User"}</div>
           </div>
-          {/* İsim Log Out oldu */}
           <Link href="/" className="flex items-center gap-2 text-red-400 hover:text-red-300 px-2 transition text-sm font-bold">
             <LogoutIcon /> Log Out 
           </Link>
@@ -64,7 +76,6 @@ const Sidebar = () => {
             </Link>
           );
         })}
-        {/* Mobilde de Log Out yaptık */}
         <Link href="/" className="flex flex-col items-center gap-1 text-red-500">
            <LogoutIcon />
            <span className="text-[10px] font-bold">Log Out</span>
