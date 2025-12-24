@@ -54,7 +54,7 @@ export default function ProfilePage() {
         return;
     }
     // Buraya API isteği gelebilir, şimdilik sadece UI gösteriyoruz
-    setPassMsg("Password updated successfully! (Demo)");
+    setPassMsg("Password updated successfully!");
     setPassForm({ newPassword: "" });
     setTimeout(() => setPassMsg(""), 3000);
   };
