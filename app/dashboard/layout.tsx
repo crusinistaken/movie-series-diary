@@ -15,7 +15,7 @@ const Sidebar = () => {
   const { username } = useUser(); // Kullanıcı adını çektik
 
   const menuItems = [
-    { name: "Dashboard", href: "/dashboard", icon: <HomeIcon /> },
+    { name: "Main Page", href: "/dashboard", icon: <HomeIcon /> },
     { name: "Movies", href: "/dashboard/movies", icon: <MovieIcon /> },
     { name: "Series", href: "/dashboard/series", icon: <TvIcon /> },
   ];
@@ -47,7 +47,7 @@ const Sidebar = () => {
             <div className="text-sm font-bold text-white">{username || "User"}</div>
           </div>
           <Link href="/" className="flex items-center gap-2 text-red-400 hover:text-red-300 px-2 transition text-sm font-bold">
-            <LogoutIcon /> Sign Out
+            <LogoutIcon /> Log Out
           </Link>
         </div>
       </div>
