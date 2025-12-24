@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useUser } from "@/context/UserContext"; // <--- 1. IMPORT EKLENDİ
+import { useUser } from "@/context/UserContext"; 
 
 // --- TİP TANIMLAMALARI ---
 interface MediaItem {
@@ -47,8 +47,6 @@ const SavedCard = ({ item, isMovie, onRefresh }: { item: MediaItem, isMovie: boo
       await fetch("/api/media", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // update ederken userId zaten item'ın içinde var, o yüzden eklemeye gerek yok ama
-        // veritabanından gelen veri olduğu için sorun çıkmaz.
         body: JSON.stringify({ ...item, ...updates }),
       });
       onRefresh();
@@ -89,7 +87,7 @@ const SavedCard = ({ item, isMovie, onRefresh }: { item: MediaItem, isMovie: boo
 
 // --- ARAMA KARTI (ResultCard) ---
 const ResultCard = ({ item, isMovie, onSaved }: { item: MediaItem, isMovie: boolean, onSaved: () => void }) => {
-  const { userId } = useUser(); // <--- 2. BURAYA EKLENDİ (Kaydederken kimin kaydettiğini bilmek için)
+  const { userId } = useUser(); 
   
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -102,12 +100,12 @@ const ResultCard = ({ item, isMovie, onSaved }: { item: MediaItem, isMovie: bool
   const [imgSrc, setImgSrc] = useState(posterUrl);
 
   const handleSave = async () => {
-    if (!userId) { alert("Please login first!"); return; } // Güvenlik kontrolü
+    if (!userId) { alert("Please login first!"); return; }
 
     setLoading(true);
     try {
       const payload = {
-        userId: userId, // <--- ID BURADA GÖNDERİLİYOR
+        userId: userId,
         tmdbId: item.id || item.tmdbId,
         title: item.title || item.name,
         type: isMovie ? "movie" : "series",
@@ -155,7 +153,7 @@ const ResultCard = ({ item, isMovie, onSaved }: { item: MediaItem, isMovie: bool
 
 // --- ANA SAYFA (CategoryPage) ---
 export default function CategoryPage() {
-  const { userId } = useUser(); // <--- 3. BURAYA EKLENDİ (Listeyi çekerken kimin listesi olduğunu bilmek için)
+  const { userId } = useUser();
   
   const params = useParams();
   const category = params.category as string;
@@ -168,16 +166,14 @@ export default function CategoryPage() {
   const [loadingSearch, setLoadingSearch] = useState(false);
 
   const fetchMyList = async () => {
-    if (!userId) return; // Kullanıcı giriş yapmamışsa çekme
+    if (!userId) return; 
     try { 
-        // URL'e userId parametresini ekliyoruz
         const res = await fetch(`/api/media?userId=${userId}`, { cache: "no-store" }); 
         const json = await res.json(); 
         if (json.data) setSavedItems(json.data); 
     } catch (err) { console.error(err); }
   };
   
-  // userId gelince veya değişince listeyi yenile
   useEffect(() => { fetchMyList(); }, [userId]); 
 
   const searchTMDB = async () => {
@@ -195,35 +191,47 @@ export default function CategoryPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    // Mobilde p-3, Masaüstünde p-6
+    <div className="min-h-screen bg-gray-900 text-white md:p-6 p-2">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
-            <Link href="/dashboard" className="text-gray-400 hover:text-white transition">← Back</Link>
-            <h1 className="text-3xl font-bold capitalize">{category} Diary</h1>
+        
+        {/* Başlık Alanı */}
+        <div className="flex items-center gap-3 mb-6 mt-2 md:mt-0">
+            <Link href="/dashboard" className="text-gray-400 hover:text-white transition bg-gray-800 p-2 rounded-full md:bg-transparent md:p-0">←</Link>
+            <h1 className="text-2xl md:text-3xl font-bold capitalize">{category} Diary</h1>
         </div>
-        <div className="flex gap-2 mb-0 overflow-x-auto pb-1">
+
+        {/* Sekmeler (Mobilde parmakla sağa sola kaydırılabilir) */}
+        <div className="flex gap-2 mb-0 overflow-x-auto pb-2 scrollbar-hide">
             {["watching", "completed", "plan to watch", "add new"].map((tab) => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-3 rounded-t-lg font-bold text-sm transition uppercase ${activeTab === tab ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`}>
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 md:px-6 md:py-3 whitespace-nowrap rounded-t-lg font-bold text-xs md:text-sm transition uppercase flex-shrink-0 ${activeTab === tab ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`}>
                 {tab}
             </button>
             ))}
         </div>
-        <div className="bg-gray-800 p-6 rounded-b-lg rounded-tr-lg min-h-[500px] shadow-2xl">
+
+        {/* Ana İçerik Kutusu */}
+        <div className="bg-gray-800 p-3 md:p-6 rounded-b-lg rounded-tr-lg min-h-[500px] shadow-2xl">
+            
+            {/* ARAMA VE EKLEME EKRANI */}
             {activeTab === "add new" && (
             <div>
-                <div className="flex gap-2 mb-6">
-                    <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && searchTMDB()} placeholder={`Search ${isMovie ? "movies" : "tv shows"}...`} className="flex-1 p-3 bg-gray-900 rounded border border-gray-700 focus:border-blue-500" />
-                    <button onClick={searchTMDB} className="bg-blue-600 px-6 rounded font-bold">{loadingSearch ? "..." : "Search"}</button>
+                <div className="flex flex-col md:flex-row gap-2 mb-6">
+                    <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && searchTMDB()} placeholder={`Search ${isMovie ? "movies" : "tv shows"}...`} className="flex-1 p-3 bg-gray-900 rounded border border-gray-700 focus:border-blue-500 w-full" />
+                    <button onClick={searchTMDB} className="bg-blue-600 px-6 py-3 rounded font-bold w-full md:w-auto">{loadingSearch ? "..." : "Search"}</button>
                 </div>
                 <div className="space-y-4">
                     {searchResults.map((item) => ( <ResultCard key={item.id || item.tmdbId} item={item} isMovie={isMovie} onSaved={fetchMyList} /> ))}
                 </div>
             </div>
             )}
+
+            {/* LİSTE EKRANI */}
             {activeTab !== "add new" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                // Mobilde tek sütun (grid-cols-1), Masaüstünde iki sütun (md:grid-cols-2)
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     {filteredList.length > 0 ? ( filteredList.map((item) => ( <SavedCard key={item._id} item={item} isMovie={isMovie} onRefresh={fetchMyList} /> )) ) : (
-                        <div className="col-span-2 text-center py-20 text-gray-500"><p className="text-xl mb-2">Liste boş.</p></div>
+                        <div className="col-span-1 md:col-span-2 text-center py-20 text-gray-500"><p className="text-xl mb-2">Liste boş.</p></div>
                     )}
                 </div>
             )}
