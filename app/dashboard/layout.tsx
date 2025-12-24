@@ -74,12 +74,10 @@ const Sidebar = () => {
 
 // Bu layout, içindeki sayfaları (children) sarmalar
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  // UserProvider'ı buradan kaldırdık çünkü artık en dışta (RootLayout) var.
   return (
     <div className="min-h-screen bg-gray-900 text-white flex">
-      {/* Menümüzü buraya koyduk */}
       <Sidebar />
-      
-      {/* İçerik Kısmı */}
       <main className="flex-1 md:ml-64 w-full md:p-8 pb-24">
         {children}
       </main>

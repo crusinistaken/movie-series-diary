@@ -21,7 +21,6 @@ export default function RootLayout({
       <body className={inter.className}>
         {/* 2. TÜM UYGULAMAYI SARMALADIK */}
         <UserProvider>
-          <Navbar />
           {children}
         </UserProvider>
       </body>

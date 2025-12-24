@@ -1,197 +1,101 @@
 "use client";
+import { useState, useEffect } from "react";
+import { useUser } from "@/context/UserContext";
 import Link from "next/link";
-import { useState } from "react";
-import { useUser } from "@/context/UserContext"; // <--- HAFıZAYI ÇAĞIRDIK
 
-// --- YEREL AVATAR LİSTESİ ---
-const AVATAR_OPTIONS = [
-  // url kısmına senin koyduğun dosya isimlerini yaz
-  { name: "The Chemist", url: "/avatars/avatar1.png" }, 
-  { name: "The Dragon", url: "/avatars/avatar2.png" },
-  { name: "The Detective", url: "/avatars/avatar3.png" },
-  { name: "The Villain", url: "/avatars/avatar4.png" },
-];
+// --- İKONLAR ---
+const MovieIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-blue-500"><path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 0 1-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5A1.125 1.125 0 0 1 18 18.375M20.625 4.5H3.375m17.25 0c.621 0 1.125.504 1.125 1.125M20.625 4.5h-1.5C18.504 4.5 18 5.004 18 5.625m3.75 0v1.5c0 .621-.504 1.125-1.125 1.125M3.375 4.5c-.621 0-1.125.504-1.125 1.125M3.375 4.5h1.5C5.496 4.5 6 5.004 6 5.625m-3.75 0v1.5c0 .621.504 1.125 1.125 1.125m0 0h1.5m4.875 6.018c.163.03.332.047.506.047.533 0 1.006-.176 1.387-.474m-1.893.427L12 14.25" /></svg>);
+const TvIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-purple-500"><path strokeLinecap="round" strokeLinejoin="round" d="M6 20.25h12m-7.5-3v3m3-3v3m-10.125-3h17.25c.621 0 1.125-.504 1.125-1.125V4.875c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125Z" /></svg>);
+const StarIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-yellow-500"><path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" /></svg>);
 
 export default function ProfilePage() {
-  // --- GLOBAL STATE KULLANIMI ---
-const { userAvatar, setUserAvatar, username } = useUser();  
-  const [loading, setLoading] = useState(false);
-  const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
-  
-  // Resim Hata Yönetimi
-  const [mainImgSrc, setMainImgSrc] = useState(userAvatar);
-  if (mainImgSrc !== userAvatar && !mainImgSrc.includes("/images/default-user.png")) {
-    setMainImgSrc(userAvatar);
-  }
+  const { userId, username } = useUser();
+  const [stats, setStats] = useState({ movies: 0, series: 0, completed: 0 });
+  const [loading, setLoading] = useState(true);
 
-
-  const handleSave = async () => {
-    // 1. Yeni şifreler eşleşiyor mu kontrolü
-    if (passwords.new && passwords.new !== passwords.confirm) {
-      alert("New passwords do not match!"); 
-      return;
-    }
-
-    // 2. Eğer şifre kutuları boşsa işlem yapma (veya sadece avatar kaydetmiş say)
-    if (!passwords.current && !passwords.new) {
-        alert("Avatar updated! (No password change requested)");
-        return;
-    }
-
-    setLoading(true);
-
-    try {
-      // 3. API'ye istek at
-      const res = await fetch("/api/user/change-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: username, // Context'ten gelen isim
-          currentPassword: passwords.current,
-          newPassword: passwords.new
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        alert("Success: " + data.message);
-        setPasswords({ current: "", new: "", confirm: "" }); // Kutuları temizle
-      } else {
-        alert("Error: " + data.message); // Örn: "Mevcut şifre yanlış"
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!userId) return;
+      try {
+        // Tüm listeyi çekiyoruz
+        const res = await fetch(`/api/media?userId=${userId}`);
+        const json = await res.json();
+        
+        if (json.data) {
+          // Javascript ile sayıları hesaplıyoruz
+          const moviesCount = json.data.filter((i: any) => i.type === 'movie').length;
+          const seriesCount = json.data.filter((i: any) => i.type === 'series').length;
+          const completedCount = json.data.filter((i: any) => i.status === 'completed').length;
+          
+          setStats({ movies: moviesCount, series: seriesCount, completed: completedCount });
+        }
+      } catch (err) {
+        console.error("Stats error:", err);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      alert("Bir hata oluştu.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchStats();
+  }, [userId]);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6 md:p-12">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-        
-        <div className="md:col-span-1 space-y-6">
-          <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700 shadow-2xl flex flex-col items-center text-center relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-blue-600/20 to-transparent"></div>
-            
-            {/* BÜYÜK PROFİL RESMİ */}
-            <div className="relative z-10 w-40 h-40 mb-4 group">
-              <img 
-                src={mainImgSrc} // <--- Global veri
-                alt="Profile" 
-                className="w-full h-full rounded-full border-4 border-gray-700 shadow-lg bg-gray-600 object-cover"
-                onError={() => setMainImgSrc("/images/default-user.png")} // <--- Hata yönetimi
-              />
-              <div className="absolute bottom-2 right-2 bg-green-500 w-6 h-6 rounded-full border-4 border-gray-800"></div>
-            </div>
-
-<h1 className="text-3xl font-bold mb-1">{username || "Misafir"}</h1>            <p className="text-gray-400 text-sm mb-6">user@example.com</p>
-
-            <div className="grid grid-cols-2 gap-4 w-full border-t border-gray-700 pt-6">
-              <div className="bg-gray-700/30 p-3 rounded-lg">
-                <span className="block text-2xl font-bold text-blue-400">12</span>
-                <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Movies</span>
-              </div>
-              <div className="bg-gray-700/30 p-3 rounded-lg">
-                <span className="block text-2xl font-bold text-green-400">5</span>
-                <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Series</span>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-6">
+      
+      {/* Üst Kısım: Avatar ve İsim */}
+      <div className="mt-10 mb-8 text-center animate-fadeIn">
+        <div className="w-28 h-28 mx-auto rounded-full bg-gradient-to-r from-blue-500 to-purple-600 p-1">
+          <div className="w-full h-full bg-gray-900 rounded-full flex items-center justify-center text-4xl font-bold uppercase">
+             {username ? username.charAt(0) : "U"}
           </div>
-
-          <Link href="/dashboard" className="block w-full py-4 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-center rounded-xl font-bold transition">
-            ← Back to Dashboard
-          </Link>
         </div>
-
-        <div className="md:col-span-2 space-y-6">
-          
-          <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700 shadow-xl">
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-              <span className="text-blue-500">🎭</span> Choose Your Character
-            </h2>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
-              {AVATAR_OPTIONS.map((avatar, index) => (
-                <button
-                  key={index}
-                  // TIKLAYINCA GLOBAL STATE'İ GÜNCELLİYORUZ
-                  onClick={() => setUserAvatar(avatar.url)} 
-                  className={`group relative rounded-full p-1 transition-all ${
-                    userAvatar === avatar.url  // <--- Karşılaştırmayı global veriyle yapıyoruz
-                    ? "ring-4 ring-blue-500 bg-blue-500/20 scale-110" 
-                    : "hover:bg-gray-700 ring-2 ring-transparent hover:ring-gray-600"
-                  }`}
-                >
-                  <img src={avatar.url} alt={avatar.name} className="w-full h-full rounded-full bg-gray-600 object-cover" />
-                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs bg-black text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-20">
-                    {avatar.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700 shadow-xl">
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-              <span className="text-yellow-500">🔒</span> Security Settings
-            </h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-gray-400 mb-1 ml-1">Current Password</label>
-                <input 
-                  type="password" 
-                  value={passwords.current}
-                  onChange={(e) => setPasswords({...passwords, current: e.target.value})}
-                  className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition"
-                  placeholder="••••••••"
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1 ml-1">New Password</label>
-                  <input 
-                    type="password" 
-                    value={passwords.new}
-                    onChange={(e) => setPasswords({...passwords, new: e.target.value})}
-                    className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-blue-500 focus:outline-none"
-                    placeholder="New password"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1 ml-1">Confirm Password</label>
-                  <input 
-                    type="password" 
-                    value={passwords.confirm}
-                    onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
-                    className={`w-full bg-gray-900 border rounded-lg p-3 text-white focus:outline-none ${
-                        passwords.confirm && passwords.new !== passwords.confirm 
-                        ? "border-red-500 focus:border-red-500" 
-                        : "border-gray-600 focus:border-blue-500"
-                    }`}
-                    placeholder="Confirm new password"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 flex justify-end">
-              <button 
-                onClick={handleSave}
-                disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition shadow-lg hover:shadow-blue-600/20 active:scale-95 disabled:opacity-50 flex items-center gap-2"
-              >
-                {loading ? "Saving..." : "Save Changes"}
-              </button>
-            </div>
-
-          </div>
-
-        </div>
+        <h1 className="text-3xl font-bold mt-4">{username || "User Profile"}</h1>
+        <p className="text-gray-400">Movie & Series Tracker</p>
       </div>
+
+      {/* İstatistik Kartları */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
+        
+        {/* Movies Card */}
+        <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 flex items-center gap-4 shadow-lg">
+          <div className="bg-blue-500/10 p-4 rounded-lg">
+            <MovieIcon />
+          </div>
+          <div>
+            <p className="text-gray-400 text-sm">Total Movies</p>
+            <p className="text-3xl font-bold">{loading ? "..." : stats.movies}</p>
+          </div>
+        </div>
+
+        {/* Series Card */}
+        <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 flex items-center gap-4 shadow-lg">
+          <div className="bg-purple-500/10 p-4 rounded-lg">
+            <TvIcon />
+          </div>
+          <div>
+            <p className="text-gray-400 text-sm">Total Series</p>
+            <p className="text-3xl font-bold">{loading ? "..." : stats.series}</p>
+          </div>
+        </div>
+
+        {/* Completed Card */}
+        <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 flex items-center gap-4 shadow-lg">
+          <div className="bg-yellow-500/10 p-4 rounded-lg">
+            <StarIcon />
+          </div>
+          <div>
+            <p className="text-gray-400 text-sm">Completed</p>
+            <p className="text-3xl font-bold">{loading ? "..." : stats.completed}</p>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Dashboard'a Dön Butonu */}
+      <Link href="/dashboard" className="mt-12 text-blue-400 hover:text-white transition flex items-center gap-2 font-bold">
+        ← Back to Dashboard
+      </Link>
+
     </div>
   );
 }
