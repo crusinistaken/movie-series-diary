@@ -19,8 +19,7 @@ const Sidebar = () => {
     { name: "Main Page", href: "/dashboard", icon: <HomeIcon /> }, // İsim değişti
     { name: "Movies", href: "/dashboard/movies", icon: <MovieIcon /> },
     { name: "Series", href: "/dashboard/series", icon: <TvIcon /> },
-    { name: "Profile", href: "/profile", icon: <UserIcon /> }, // Profile eklendi
-  ];
+    { name: "Profile", href: "/dashboard/profile", icon: <UserIcon /> },  ];
 
   return (
     <>
