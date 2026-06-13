@@ -231,7 +231,7 @@ export default function CategoryPage() {
                 // Mobilde tek sütun (grid-cols-1), Masaüstünde iki sütun (md:grid-cols-2)
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     {filteredList.length > 0 ? ( filteredList.map((item) => ( <SavedCard key={item._id} item={item} isMovie={isMovie} onRefresh={fetchMyList} /> )) ) : (
-                        <div className="col-span-1 md:col-span-2 text-center py-20 text-gray-500"><p className="text-xl mb-2">Liste boş.</p></div>
+                        <div className="col-span-1 md:col-span-2 text-center py-20 text-gray-500"><p className="text-xl mb-2">Your list is empty.</p></div>
                     )}
                 </div>
             )}
